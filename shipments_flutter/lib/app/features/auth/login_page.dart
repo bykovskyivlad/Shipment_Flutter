@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'register_page.dart';
 import 'package:dio/dio.dart';
 import 'auth_service.dart';
+import '../../core/storage/secure_storage_service.dart';
+import '../home/home_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -15,7 +17,8 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
-
+  final SecureStorageService _storageService = SecureStorageService();
+  
   bool _obscurePassword = true;
   bool _isLoading = false;
 
@@ -37,18 +40,25 @@ class _LoginPageState extends State<LoginPage> {
 
   try {
     final result = await _authService.login(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
+     email: _emailController.text.trim(),
+     password: _passwordController.text.trim(),
     );
+
+    final token = result['token'];
+
+   if (token != null && token is String) {
+    await _storageService.saveToken(token);
+    }
 
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Login success: ${result.toString()}'),
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+      builder: (context) => const HomePage(),
       ),
     );
-  } on DioException catch (e) {
+    } on DioException catch (e) {
     if (!mounted) return;
 
     String message = 'Login failed';
