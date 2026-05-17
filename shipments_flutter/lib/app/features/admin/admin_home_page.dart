@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class AdminHomePage extends StatelessWidget {
+  const AdminHomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
+        title: const Text('Admin Home'),
       ),
       body: const Center(
         child: Text(
-          'Login successful',
+          'Admin dashboard',
           style: TextStyle(fontSize: 24),
         ),
       ),

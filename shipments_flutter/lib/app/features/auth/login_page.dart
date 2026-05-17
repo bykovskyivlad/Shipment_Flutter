@@ -1,9 +1,12 @@
-import 'package:flutter/material.dart';
-import 'register_page.dart';
 import 'package:dio/dio.dart';
-import 'auth_service.dart';
+import 'package:flutter/material.dart';
+import '../../core/auth/jwt_service.dart';
 import '../../core/storage/secure_storage_service.dart';
-import '../home/home_page.dart';
+import '../admin/admin_home_page.dart';
+import '../client/client_home_page.dart';
+import '../courier/courier_home_page.dart';
+import 'auth_service.dart';
+import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -18,6 +21,7 @@ class _LoginPageState extends State<LoginPage> {
   final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
   final SecureStorageService _storageService = SecureStorageService();
+  final JwtService _jwtService = JwtService();
   
   bool _obscurePassword = true;
   bool _isLoading = false;
@@ -38,27 +42,44 @@ class _LoginPageState extends State<LoginPage> {
     _isLoading = true;
   });
 
-  try {
+try {
     final result = await _authService.login(
-     email: _emailController.text.trim(),
-     password: _passwordController.text.trim(),
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
     );
 
-    final token = result['token'];
-
-   if (token != null && token is String) {
-    await _storageService.saveToken(token);
+    if (result is! Map || result['token'] == null || result['token'] is! String) {
+      throw Exception('Token was not returned by the server');
     }
 
-    if (!mounted) return;
+    final token = result['token'] as String;
+      await _storageService.saveToken(token);
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-      builder: (context) => const HomePage(),
-      ),
-    );
-    } on DioException catch (e) {
+    final role = _jwtService.getRoleFromToken(token);
+      if (!mounted) return;
+    Widget destination;
+
+  switch (role) {
+    case 'Admin':
+      destination = const AdminHomePage();
+      break;
+    case 'Courier':
+      destination = const CourierHomePage();
+      break;
+    case 'Client':
+      destination = const ClientHomePage();
+      break;
+    default:
+      destination = const ClientHomePage();
+  }
+
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (context) => destination,
+    ),
+  );
+} on DioException catch (e) {
     if (!mounted) return;
 
     String message = 'Login failed';
