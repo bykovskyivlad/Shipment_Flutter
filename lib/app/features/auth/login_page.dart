@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'register_page.dart';
+import 'package:dio/dio.dart';
+import 'auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -11,7 +13,7 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-
+  final AuthService _authService = AuthService();
   final _formKey = GlobalKey<FormState>();
 
   bool _obscurePassword = true;
@@ -25,28 +27,59 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _submitLogin() async {
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
+  if (!_formKey.currentState!.validate()) {
+    return;
+  }
 
-    setState(() {
-      _isLoading = true;
-    });
+  setState(() {
+    _isLoading = true;
+  });
 
-    await Future.delayed(const Duration(seconds: 1));
+  try {
+    final result = await _authService.login(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
 
     if (!mounted) return;
 
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Login success: ${result.toString()}'),
+      ),
+    );
+  } on DioException catch (e) {
+    if (!mounted) return;
+
+    String message = 'Login failed';
+
+    if (e.response != null && e.response?.data != null) {
+      message = e.response?.data.toString() ?? message;
+    } else if (e.message != null) {
+      message = e.message!;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+      ),
+    );
+  } catch (e) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Unexpected error: $e'),
+      ),
+    );
+  } finally {
+  if (mounted) {
     setState(() {
       _isLoading = false;
     });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Login button pressed'),
-      ),
-    );
   }
+}
+}
 
   void _goToRegister() {
   Navigator.push(
