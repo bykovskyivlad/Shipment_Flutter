@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+
 import '../../core/auth/jwt_service.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../admin/admin_home_page.dart';
@@ -18,11 +19,12 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final AuthService _authService = AuthService();
+
   final _formKey = GlobalKey<FormState>();
+  final AuthService _authService = AuthService();
   final SecureStorageService _storageService = SecureStorageService();
   final JwtService _jwtService = JwtService();
-  
+
   bool _obscurePassword = true;
   bool _isLoading = false;
 
@@ -33,93 +35,72 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _submitLogin() async {
-  if (!_formKey.currentState!.validate()) {
-    return;
-  }
-
-  setState(() {
-    _isLoading = true;
-  });
-
-try {
-    final result = await _authService.login(
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-    );
-
-    if (result is! Map || result['token'] == null || result['token'] is! String) {
-      throw Exception('Token was not returned by the server');
+  Future<void> _submitLogin() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
     }
 
-    final token = result['token'] as String;
-      await _storageService.saveToken(token);
-
-    final role = _jwtService.getRoleFromToken(token);
-      if (!mounted) return;
-    Widget destination;
-
-  switch (role) {
-    case 'Admin':
-      destination = const AdminHomePage();
-      break;
-    case 'Courier':
-      destination = const CourierHomePage();
-      break;
-    case 'Client':
-      destination = const ClientHomePage();
-      break;
-    default:
-      destination = const ClientHomePage();
-  }
-
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (context) => destination,
-    ),
-  );
-} on DioException catch (e) {
-    if (!mounted) return;
-
-    String message = 'Login failed';
-
-    if (e.response != null && e.response?.data != null) {
-      message = e.response?.data.toString() ?? message;
-    } else if (e.message != null) {
-      message = e.message!;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-      ),
-    );
-  } catch (e) {
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Unexpected error: $e'),
-      ),
-    );
-  } finally {
-  if (mounted) {
     setState(() {
-      _isLoading = false;
+      _isLoading = true;
     });
-  }
-}
-}
 
-  void _goToRegister() {
-  Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => const RegisterPage(),
-    ),
-  );
-}
+    try {
+      final result = await _authService.login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      await _storageService.saveToken(result.token);
+
+      final role = _jwtService.getRoleFromToken(result.token);
+
+      if (!mounted) return;
+
+      Widget destination;
+
+      switch (role) {
+        case 'Admin':
+          destination = const AdminHomePage();
+          break;
+        case 'Courier':
+          destination = const CourierHomePage();
+          break;
+        case 'Client':
+          destination = const ClientHomePage();
+          break;
+        default:
+          destination = const ClientHomePage();
+      }
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => destination,
+        ),
+      );
+    } on DioException catch (e) {
+      if (!mounted) return;
+
+      final message =
+          e.response?.data?.toString() ?? e.message ?? 'Login failed';
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unexpected error: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -230,7 +211,14 @@ try {
                     ),
                     const SizedBox(height: 12),
                     TextButton(
-                      onPressed: _goToRegister,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const RegisterPage(),
+                          ),
+                        );
+                      },
                       child: const Text('Don’t have an account? Register'),
                     ),
                   ],

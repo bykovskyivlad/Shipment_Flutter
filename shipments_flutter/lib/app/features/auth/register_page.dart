@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+
 import 'auth_service.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -10,28 +11,27 @@ class RegisterPage extends StatefulWidget {
 }
 
 class _RegisterPageState extends State<RegisterPage> {
-  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  String _selectedRole = 'Client';
+
   final _formKey = GlobalKey<FormState>();
   final AuthService _authService = AuthService();
 
+  String _selectedRole = 'Client';
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
 
   @override
   void dispose() {
-    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
-  void _submitRegister() async {
+  Future<void> _submitRegister() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -41,18 +41,17 @@ class _RegisterPageState extends State<RegisterPage> {
     });
 
     try {
-    final result = await _authService.register(
-      username: _usernameController.text.trim(),
-      email: _emailController.text.trim(),
-      password: _passwordController.text.trim(),
-      role: _selectedRole,
-    );
+      await _authService.register(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+        role: _selectedRole,
+      );
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Registration successful: $result'),
+        const SnackBar(
+          content: Text('Registration successful'),
         ),
       );
 
@@ -60,13 +59,8 @@ class _RegisterPageState extends State<RegisterPage> {
     } on DioException catch (e) {
       if (!mounted) return;
 
-      String message = 'Registration failed';
-
-      if (e.response?.data != null) {
-        message = e.response!.data.toString();
-      } else if (e.message != null) {
-        message = e.message!;
-      }
+      final message =
+          e.response?.data?.toString() ?? e.message ?? 'Registration failed';
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
@@ -126,74 +120,51 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                   TextFormField(
-  controller: _usernameController,
-  decoration: const InputDecoration(
-    labelText: 'Username',
-    hintText: 'Enter your username',
-    border: OutlineInputBorder(),
-    prefixIcon: Icon(Icons.person_outline),
-  ),
-  validator: (value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Enter username';
-    }
-    if (value.trim().length < 2) {
-      return 'Username is too short';
-    }
-    return null;
-  },
-),
-const SizedBox(height: 16),
-DropdownButtonFormField<String>(
-  initialValue: _selectedRole,
-  decoration: const InputDecoration(
-    labelText: 'Role',
-    border: OutlineInputBorder(),
-    prefixIcon: Icon(Icons.badge_outlined),
-  ),
-  items: const [
-    DropdownMenuItem(
-      value: 'Client',
-      child: Text('Client'),
-    ),
-    DropdownMenuItem(
-      value: 'Courier',
-      child: Text('Courier'),
-    ),
-    DropdownMenuItem(
-      value: 'Admin',
-      child: Text('Admin'),
-    ),
-  ],
-  onChanged: (value) {
-    if (value != null) {
-      setState(() {
-        _selectedRole = value;
-      });
-    }
-  },
-),
-  const SizedBox(height: 16),
-  TextFormField(
-    controller: _emailController,
-    keyboardType: TextInputType.emailAddress,
-    decoration: const InputDecoration(
-    labelText: 'Email',
-    hintText: 'Enter your email',
-    border: OutlineInputBorder(),
-    prefixIcon: Icon(Icons.email_outlined),
-  ),
-    validator: (value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Enter email';
-    }
-    if (!value.contains('@')) {
-      return 'Enter valid email';
-    }
-    return null;
-      },
-    ),
+                    DropdownButtonFormField<String>(
+                      value: _selectedRole,
+                      decoration: const InputDecoration(
+                        labelText: 'Role',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.badge_outlined),
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'Client',
+                          child: Text('Client'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'Courier',
+                          child: Text('Courier'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() {
+                            _selectedRole = value;
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: 'Email',
+                        hintText: 'Enter your email',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.email_outlined),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Enter email';
+                        }
+                        if (!value.contains('@')) {
+                          return 'Enter valid email';
+                        }
+                        return null;
+                      },
+                    ),
                     const SizedBox(height: 16),
                     TextFormField(
                       controller: _passwordController,

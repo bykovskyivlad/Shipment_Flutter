@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/storage/secure_storage_service.dart';
 import '../auth/login_page.dart';
+import 'admin_shipments_page.dart';
 
 class AdminHomePage extends StatelessWidget {
   const AdminHomePage({super.key});
@@ -34,10 +35,17 @@ class AdminHomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: const Center(
-        child: Text(
-          'Admin dashboard',
-          style: TextStyle(fontSize: 24),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const AdminShipmentsPage(),
+              ),
+            );
+          },
+          child: const Text('Open admin shipments'),
         ),
       ),
     );

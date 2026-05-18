@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/storage/secure_storage_service.dart';
 import '../auth/login_page.dart';
+import 'courier_shipments_page.dart';
 
 class CourierHomePage extends StatelessWidget {
   const CourierHomePage({super.key});
@@ -34,10 +35,17 @@ class CourierHomePage extends StatelessWidget {
           ),
         ],
       ),
-      body: const Center(
-        child: Text(
-          'Courier dashboard',
-          style: TextStyle(fontSize: 24),
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const CourierShipmentsPage(),
+              ),
+            );
+          },
+          child: const Text('Open courier shipments'),
         ),
       ),
     );
