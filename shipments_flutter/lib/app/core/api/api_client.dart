@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'auth_interceptor.dart';
 
 class ApiClient {
   static const String baseUrl = 'http://127.0.0.1:5014/api';
@@ -13,5 +14,5 @@ class ApiClient {
         'Accept': 'application/json',
       },
     ),
-  );
+  )..interceptors.add(AuthInterceptor());
 }

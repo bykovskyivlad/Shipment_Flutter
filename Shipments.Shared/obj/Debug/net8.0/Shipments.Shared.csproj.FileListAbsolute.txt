@@ -44,3 +44,4 @@ C:\Users\odyrd\source\repos\ShipmentsSystem\Shipments.Shared\obj\Debug\net8.0\Sh
 C:\Users\odyrd\source\repos\ShipmentsSystem\Shipments.Shared\obj\Debug\net8.0\refint\Shipments.Shared.dll
 C:\Users\odyrd\source\repos\ShipmentsSystem\Shipments.Shared\obj\Debug\net8.0\Shipments.Shared.pdb
 C:\Users\odyrd\source\repos\ShipmentsSystem\Shipments.Shared\obj\Debug\net8.0\ref\Shipments.Shared.dll
+C:\Users\odyrd\source\repos\ShipmentsSystem\Shipments.Shared\obj\Debug\net8.0\Shipments.Shared.sourcelink.json

@@ -456,3 +456,4 @@ C:\Users\odyrd\source\repos\ShipmentsSystem\Shipments.Api\obj\Debug\net8.0\refin
 C:\Users\odyrd\source\repos\ShipmentsSystem\Shipments.Api\obj\Debug\net8.0\Shipments.Api.pdb
 C:\Users\odyrd\source\repos\ShipmentsSystem\Shipments.Api\obj\Debug\net8.0\Shipments.Api.genruntimeconfig.cache
 C:\Users\odyrd\source\repos\ShipmentsSystem\Shipments.Api\obj\Debug\net8.0\ref\Shipments.Api.dll
+C:\Users\odyrd\source\repos\ShipmentsSystem\Shipments.Api\obj\Debug\net8.0\Shipments.Api.sourcelink.json
