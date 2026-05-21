@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:dio/dio.dart';
+
 import '../storage/secure_storage_service.dart';
 
 class AuthInterceptor extends Interceptor {
@@ -11,14 +13,29 @@ class AuthInterceptor extends Interceptor {
   ) async {
     final token = await _storageService.getToken();
 
-    print('TOKEN FROM STORAGE: $token');
-
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }
 
-    print('FINAL REQUEST HEADERS: ${options.headers}');
+    if (kDebugMode) {
+      debugPrint('REQUEST[${options.method}] => PATH: ${options.path}');
+      debugPrint('TOKEN ATTACHED: ${token != null && token.isNotEmpty}');
+    }
 
     handler.next(options);
+  }
+
+  @override
+  void onError(
+    DioException err,
+    ErrorInterceptorHandler handler,
+  ) {
+    if (kDebugMode) {
+      debugPrint(
+        'ERROR[${err.response?.statusCode}] => PATH: ${err.requestOptions.path}',
+      );
+    }
+
+    handler.next(err);
   }
 }

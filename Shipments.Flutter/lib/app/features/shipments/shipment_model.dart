@@ -22,6 +22,21 @@ class ShipmentModel {
   });
 
   factory ShipmentModel.fromJson(Map<String, dynamic> json) {
+    String? description = json['description']?.toString();
+
+    final events = json['events'];
+    if ((description == null || description.isEmpty) && events is List) {
+      for (final event in events) {
+        if (event is Map<String, dynamic>) {
+          final notes = event['notes']?.toString();
+          if (notes != null && notes.trim().isNotEmpty) {
+            description = notes;
+            break;
+          }
+        }
+      }
+    }
+
     return ShipmentModel(
       id: json['id'],
       status: json['status']?.toString(),
@@ -30,7 +45,7 @@ class ShipmentModel {
       recipientCity: json['recipientCity']?.toString(),
       recipientAddress: json['recipientAddress']?.toString(),
       recipientPostalCode: json['recipientPostalCode']?.toString(),
-      description: json['description']?.toString(),
+      description: description,
       createdAt: json['createdAt']?.toString(),
     );
   }

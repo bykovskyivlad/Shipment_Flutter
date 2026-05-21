@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/ui/app_snackbar.dart';
 import 'client_shipments_service.dart';
 
 class ClientCreateShipmentPage extends StatefulWidget {
@@ -48,7 +49,7 @@ class _ClientCreateShipmentPageState extends State<ClientCreateShipmentPage> {
     });
 
     try {
-      final result = await _shipmentsService.createShipment(
+      await _shipmentsService.createShipment(
         recipientName: _recipientNameController.text.trim(),
         recipientPhone: _recipientPhoneController.text.trim(),
         recipientCity: _recipientCityController.text.trim(),
@@ -60,12 +61,7 @@ class _ClientCreateShipmentPageState extends State<ClientCreateShipmentPage> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Shipment created: $result'),
-        ),
-      );
-
+      AppSnackbar.showSuccess(context, 'Shipment created successfully');
       Navigator.pop(context, true);
     } on DioException catch (e) {
       if (!mounted) return;
@@ -73,15 +69,11 @@ class _ClientCreateShipmentPageState extends State<ClientCreateShipmentPage> {
       final message =
           e.response?.data?.toString() ?? e.message ?? 'Create shipment failed';
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      AppSnackbar.showError(context, message);
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unexpected error: $e')),
-      );
+      AppSnackbar.showError(context, 'Unexpected error: $e');
     } finally {
       if (mounted) {
         setState(() {

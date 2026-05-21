@@ -17,34 +17,45 @@ class ClientShipmentsService {
 
     return [];
   }
-Future<void> cancelShipment(dynamic shipmentId) async {
-  await _dio.patch(
-    '/shipments/$shipmentId/cancel',
-    data: {},
-  );
-}
-Future<dynamic> createShipment({
-  required String recipientName,
-  required String recipientPhone,
-  required String recipientCity,
-  required String recipientAddress,
-  required String recipientPostalCode,
-  required double weight,
-  required String description,
-}) async {
-  final response = await _dio.post(
-    '/shipments',
-    data: {
-      'recipientName': recipientName,
-      'recipientPhone': recipientPhone,
-      'recipientCity': recipientCity,
-      'recipientAddress': recipientAddress,
-      'recipientPostalCode': recipientPostalCode,
-      'weight': weight,
-      'description': description,
-    },
-  );
- 
-  return response.data;
-}
+
+  Future<ShipmentModel> getShipmentDetails(dynamic shipmentId) async {
+    final response = await _dio.get('/shipments/$shipmentId');
+
+    if (response.data is! Map<String, dynamic>) {
+      throw Exception('Invalid shipment details response format');
+    }
+
+    return ShipmentModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<void> cancelShipment(dynamic shipmentId) async {
+    await _dio.patch(
+      '/shipments/$shipmentId/cancel',
+      data: {},
+    );
+  }
+
+  Future<dynamic> createShipment({
+    required String recipientName,
+    required String recipientPhone,
+    required String recipientCity,
+    required String recipientAddress,
+    required String recipientPostalCode,
+    required double weight,
+    required String description,
+  }) async {
+    final response = await _dio.post(
+      '/shipments',
+      data: {
+        'recipientName': recipientName,
+        'recipientPhone': recipientPhone,
+        'recipientCity': recipientCity,
+        'recipientAddress': recipientAddress,
+        'recipientPostalCode': recipientPostalCode,
+        'notes': description,
+      },
+    );
+
+    return response.data;
+  }
 }

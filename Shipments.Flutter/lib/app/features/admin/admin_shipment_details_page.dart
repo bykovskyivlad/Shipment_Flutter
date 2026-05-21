@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/ui/app_snackbar.dart';
 import '../shipments/shipment_model.dart';
 import '../shipments/shipment_status_helper.dart';
 import 'admin_shipments_service.dart';
@@ -75,9 +76,7 @@ class _AdminShipmentDetailsPageState extends State<AdminShipmentDetailsPage> {
       if (!mounted) return;
 
       if (couriers.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No couriers found')),
-        );
+        AppSnackbar.showInfo(context, 'No couriers found');
         return;
       }
 
@@ -85,13 +84,13 @@ class _AdminShipmentDetailsPageState extends State<AdminShipmentDetailsPage> {
 
       await showDialog(
         context: context,
-        builder: (context) {
+        builder: (dialogContext) {
           return StatefulBuilder(
             builder: (context, setDialogState) {
               return AlertDialog(
                 title: Text('Assign courier to shipment ${widget.shipmentId}'),
                 content: DropdownButtonFormField<dynamic>(
-                  value: selectedCourierId,
+                  initialValue: selectedCourierId,
                   items: couriers.map((courier) {
                     final id = courier['id'];
                     final name = courier['userName'] ??
@@ -117,7 +116,7 @@ class _AdminShipmentDetailsPageState extends State<AdminShipmentDetailsPage> {
                 ),
                 actions: [
                   TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => Navigator.pop(dialogContext),
                     child: const Text('Cancel'),
                   ),
                   ElevatedButton(
@@ -134,38 +133,30 @@ class _AdminShipmentDetailsPageState extends State<AdminShipmentDetailsPage> {
                                 courierId: selectedCourierId,
                               );
 
-                              if (!context.mounted) return;
-
-                              Navigator.pop(context);
+                              if (!dialogContext.mounted) return;
+                              Navigator.pop(dialogContext);
 
                               if (!mounted) return;
 
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Courier assigned successfully'),
-                                ),
-                              );
-
-                              Navigator.pop(context, true);
+                              Future.microtask(() {
+                                if (!mounted) return;
+                                Navigator.pop(context, true);
+                              });
                             } on DioException catch (e) {
-                              if (!context.mounted) return;
+                              if (!dialogContext.mounted) return;
 
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    e.response?.data?.toString() ??
-                                        e.message ??
-                                        'Assign failed',
-                                  ),
-                                ),
-                              );
+                              final message =
+                                  e.response?.data?.toString() ??
+                                      e.message ??
+                                      'Assign failed';
+
+                              AppSnackbar.showError(dialogContext, message);
                             } catch (e) {
-                              if (!context.mounted) return;
+                              if (!dialogContext.mounted) return;
 
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Unexpected error: $e'),
-                                ),
+                              AppSnackbar.showError(
+                                dialogContext,
+                                'Unexpected error: $e',
                               );
                             } finally {
                               if (mounted) {
@@ -186,21 +177,16 @@ class _AdminShipmentDetailsPageState extends State<AdminShipmentDetailsPage> {
     } on DioException catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            e.response?.data?.toString() ??
-                e.message ??
-                'Failed to load couriers',
-          ),
-        ),
+      AppSnackbar.showError(
+        context,
+        e.response?.data?.toString() ??
+            e.message ??
+            'Failed to load couriers',
       );
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unexpected error: $e')),
-      );
+      AppSnackbar.showError(context, 'Unexpected error: $e');
     }
   }
 

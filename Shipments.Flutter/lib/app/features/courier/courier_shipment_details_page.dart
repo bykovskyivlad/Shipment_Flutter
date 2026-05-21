@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../shipments/shipment_model.dart';
 import '../shipments/shipment_status_helper.dart';
+import '../shipments/shipment_statuses.dart';
 import 'courier_shipments_service.dart';
 
 class CourierShipmentDetailsPage extends StatefulWidget {
@@ -93,6 +94,8 @@ class _CourierShipmentDetailsPageState
           ),
         ),
       );
+
+      Navigator.pop(context, true);
     } on DioException catch (e) {
       if (!mounted) return;
 
@@ -125,9 +128,9 @@ class _CourierShipmentDetailsPageState
   }
 
   Widget _buildStatusButtons() {
-    final status = int.tryParse(_shipment?.status ?? '');
+    final status = _shipment?.status;
 
-    if (status == 1) {
+    if (status == ShipmentStatuses.created) {
       return Wrap(
         spacing: 12,
         runSpacing: 12,
@@ -144,14 +147,14 @@ class _CourierShipmentDetailsPageState
       );
     }
 
-    if (status == 2) {
+    if (status == ShipmentStatuses.pickedUp) {
       return ElevatedButton(
         onPressed: _isUpdating ? null : () => _changeStatus(3),
         child: const Text('Out for delivery'),
       );
     }
 
-    if (status == 3) {
+    if (status == ShipmentStatuses.outForDelivery) {
       return Wrap(
         spacing: 12,
         runSpacing: 12,

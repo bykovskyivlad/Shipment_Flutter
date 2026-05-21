@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/ui/app_snackbar.dart';
+import 'app_roles.dart';
 import 'auth_service.dart';
 
 class RegisterPage extends StatefulWidget {
@@ -18,7 +20,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _formKey = GlobalKey<FormState>();
   final AuthService _authService = AuthService();
 
-  String _selectedRole = 'Client';
+  String _selectedRole = AppRoles.client;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   bool _isLoading = false;
@@ -49,12 +51,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Registration successful'),
-        ),
-      );
-
+      AppSnackbar.showSuccess(context, 'Registration successful');
       Navigator.pop(context);
     } on DioException catch (e) {
       if (!mounted) return;
@@ -62,15 +59,11 @@ class _RegisterPageState extends State<RegisterPage> {
       final message =
           e.response?.data?.toString() ?? e.message ?? 'Registration failed';
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      AppSnackbar.showError(context, message);
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unexpected error: $e')),
-      );
+      AppSnackbar.showError(context, 'Unexpected error: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -121,7 +114,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     const SizedBox(height: 32),
                     DropdownButtonFormField<String>(
-                      value: _selectedRole,
+                      initialValue: _selectedRole,
                       decoration: const InputDecoration(
                         labelText: 'Role',
                         border: OutlineInputBorder(),
@@ -129,12 +122,12 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                       items: const [
                         DropdownMenuItem(
-                          value: 'Client',
-                          child: Text('Client'),
+                          value: AppRoles.client,
+                          child: Text(AppRoles.client),
                         ),
                         DropdownMenuItem(
-                          value: 'Courier',
-                          child: Text('Courier'),
+                          value: AppRoles.courier,
+                          child: Text(AppRoles.courier),
                         ),
                       ],
                       onChanged: (value) {

@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/ui/app_snackbar.dart';
 import '../shipments/shipment_model.dart';
 import '../shipments/shipment_status_helper.dart';
 import 'admin_shipment_details_page.dart';
@@ -69,11 +70,7 @@ class _AdminShipmentsPageState extends State<AdminShipmentsPage> {
       if (!mounted) return;
 
       if (couriers.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No couriers found'),
-          ),
-        );
+        AppSnackbar.showInfo(context, 'No couriers found');
         return;
       }
 
@@ -81,7 +78,7 @@ class _AdminShipmentsPageState extends State<AdminShipmentsPage> {
 
       await showDialog(
         context: context,
-        builder: (context) {
+        builder: (dialogContext) {
           return StatefulBuilder(
             builder: (context, setDialogState) {
               return AlertDialog(
@@ -113,7 +110,7 @@ class _AdminShipmentsPageState extends State<AdminShipmentsPage> {
                 ),
                 actions: [
                   TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => Navigator.pop(dialogContext),
                     child: const Text('Cancel'),
                   ),
                   ElevatedButton(
@@ -126,39 +123,32 @@ class _AdminShipmentsPageState extends State<AdminShipmentsPage> {
                                 courierId: selectedCourierId,
                               );
 
-                              if (!context.mounted) return;
-
-                              Navigator.pop(context);
+                              if (!dialogContext.mounted) return;
+                              Navigator.pop(dialogContext);
 
                               if (!mounted) return;
+                              await _loadShipments();
 
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content:
-                                      Text('Courier assigned successfully'),
-                                ),
+                              if (!mounted) return;
+                              AppSnackbar.showSuccess(
+                                context,
+                                'Courier assigned successfully',
                               );
-
-                              _loadShipments();
                             } on DioException catch (e) {
-                              if (!context.mounted) return;
+                              if (!dialogContext.mounted) return;
 
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    e.response?.data?.toString() ??
-                                        e.message ??
-                                        'Assign failed',
-                                  ),
-                                ),
+                              AppSnackbar.showError(
+                                dialogContext,
+                                e.response?.data?.toString() ??
+                                    e.message ??
+                                    'Assign failed',
                               );
                             } catch (e) {
-                              if (!context.mounted) return;
+                              if (!dialogContext.mounted) return;
 
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Unexpected error: $e'),
-                                ),
+                              AppSnackbar.showError(
+                                dialogContext,
+                                'Unexpected error: $e',
                               );
                             }
                           },
@@ -173,23 +163,16 @@ class _AdminShipmentsPageState extends State<AdminShipmentsPage> {
     } on DioException catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            e.response?.data?.toString() ??
-                e.message ??
-                'Failed to load couriers',
-          ),
-        ),
+      AppSnackbar.showError(
+        context,
+        e.response?.data?.toString() ??
+            e.message ??
+            'Failed to load couriers',
       );
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Unexpected error: $e'),
-        ),
-      );
+      AppSnackbar.showError(context, 'Unexpected error: $e');
     }
   }
 
@@ -261,7 +244,7 @@ class _AdminShipmentsPageState extends State<AdminShipmentsPage> {
                       child: const Text('Assign'),
                     ),
                     onTap: () async {
-                      await Navigator.push(
+                      final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => AdminShipmentDetailsPage(
@@ -270,7 +253,15 @@ class _AdminShipmentsPageState extends State<AdminShipmentsPage> {
                         ),
                       );
 
-                      _loadShipments();
+                      if (result == true) {
+                        await _loadShipments();
+
+                        if (!mounted) return;
+                        AppSnackbar.showSuccess(
+                          context,
+                          'Courier assigned successfully',
+                        );
+                      }
                     },
                   ),
                 );

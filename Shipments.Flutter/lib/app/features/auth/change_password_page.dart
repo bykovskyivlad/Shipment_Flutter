@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/ui/app_snackbar.dart';
 import 'auth_service.dart';
 
 class ChangePasswordPage extends StatefulWidget {
@@ -48,12 +49,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password changed successfully'),
-        ),
-      );
-
+      AppSnackbar.showSuccess(context, 'Password changed successfully');
       Navigator.pop(context, true);
     } on DioException catch (e) {
       if (!mounted) return;
@@ -61,15 +57,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       final message =
           e.response?.data?.toString() ?? e.message ?? 'Change password failed';
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      AppSnackbar.showError(context, message);
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unexpected error: $e')),
-      );
+      AppSnackbar.showError(context, 'Unexpected error: $e');
     } finally {
       if (mounted) {
         setState(() {

@@ -1,17 +1,19 @@
+import 'shipment_statuses.dart';
+
 class ShipmentStatusHelper {
   static String getStatusName(String? status) {
     switch (status) {
-      case '1':
+      case ShipmentStatuses.created:
         return 'Created';
-      case '2':
+      case ShipmentStatuses.pickedUp:
         return 'Picked Up';
-      case '3':
+      case ShipmentStatuses.outForDelivery:
         return 'Out for Delivery';
-      case '4':
+      case ShipmentStatuses.delivered:
         return 'Delivered';
-      case '5':
+      case ShipmentStatuses.deliveryFailed:
         return 'Delivery Failed';
-      case '6':
+      case ShipmentStatuses.canceled:
         return 'Canceled';
       default:
         return 'Unknown';

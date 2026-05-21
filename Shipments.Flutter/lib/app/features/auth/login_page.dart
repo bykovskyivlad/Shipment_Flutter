@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/ui/app_snackbar.dart';
+import 'app_roles.dart';
 import '../../core/auth/jwt_service.dart';
 import '../../core/storage/secure_storage_service.dart';
 import '../admin/admin_home_page.dart';
@@ -70,10 +72,9 @@ class _LoginPageState extends State<LoginPage> {
         if (!mounted) return;
 
         if (changed == true) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Password changed. Please login again.'),
-            ),
+          AppSnackbar.showSuccess(
+            context,
+            'Password changed. Please login again.',
           );
         }
 
@@ -83,13 +84,13 @@ class _LoginPageState extends State<LoginPage> {
       Widget destination;
 
       switch (role) {
-        case 'Admin':
+        case AppRoles.admin:
           destination = const AdminHomePage();
           break;
-        case 'Courier':
+        case AppRoles.courier:
           destination = const CourierHomePage();
           break;
-        case 'Client':
+        case AppRoles.client:
           destination = const ClientHomePage();
           break;
         default:
@@ -108,15 +109,11 @@ class _LoginPageState extends State<LoginPage> {
       final message =
           e.response?.data?.toString() ?? e.message ?? 'Login failed';
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      AppSnackbar.showError(context, message);
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unexpected error: $e')),
-      );
+      AppSnackbar.showError(context, 'Unexpected error: $e');
     } finally {
       if (mounted) {
         setState(() {
