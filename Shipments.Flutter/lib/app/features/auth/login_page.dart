@@ -7,6 +7,7 @@ import '../admin/admin_home_page.dart';
 import '../client/client_home_page.dart';
 import '../courier/courier_home_page.dart';
 import 'auth_service.dart';
+import 'change_password_page.dart';
 import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -55,6 +56,29 @@ class _LoginPageState extends State<LoginPage> {
       final role = _jwtService.getRoleFromToken(result.token);
 
       if (!mounted) return;
+
+      if (result.mustChangePassword) {
+        final changed = await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ChangePasswordPage(),
+          ),
+        );
+
+        await _storageService.deleteToken();
+
+        if (!mounted) return;
+
+        if (changed == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Password changed. Please login again.'),
+            ),
+          );
+        }
+
+        return;
+      }
 
       Widget destination;
 

@@ -19,6 +19,16 @@ class AdminShipmentsService {
     return [];
   }
 
+  Future<ShipmentModel> getShipmentDetails(dynamic shipmentId) async {
+    final response = await _dio.get('/admin/shipments/$shipmentId');
+
+    if (response.data is! Map<String, dynamic>) {
+      throw Exception('Invalid shipment details response format');
+    }
+
+    return ShipmentModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<List<Map<String, dynamic>>> getCouriers() async {
     final response = await _dio.get('/admin/shipments/couriers');
 

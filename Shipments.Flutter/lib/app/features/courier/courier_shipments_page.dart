@@ -116,7 +116,7 @@ class _CourierShipmentsPageState extends State<CourierShipmentsPage> {
                 return ShipmentCard(
                   shipment: shipment,
                   onTap: () async {
-                    await Navigator.push(
+                    final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => CourierShipmentDetailsPage(
@@ -125,7 +125,9 @@ class _CourierShipmentsPageState extends State<CourierShipmentsPage> {
                       ),
                     );
 
-                    _loadShipments();
+                    if (result == true) {
+                      _loadShipments();
+                    }
                   },
                 );
               },

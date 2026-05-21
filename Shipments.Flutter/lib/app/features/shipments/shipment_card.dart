@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import 'shipment_model.dart';
+import 'shipment_status_helper.dart';
 
 class ShipmentCard extends StatelessWidget {
   final ShipmentModel shipment;
@@ -13,8 +15,9 @@ class ShipmentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title =
-        'Shipment ${shipment.id ?? '-'}${shipment.status != null ? ' • ${shipment.status}' : ''}';
+    final statusName = ShipmentStatusHelper.getStatusName(shipment.status);
+
+    final title = 'Shipment ${shipment.id ?? '-'} • $statusName';
 
     final subtitle = [
       shipment.recipientName,

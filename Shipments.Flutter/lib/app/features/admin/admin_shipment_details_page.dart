@@ -3,42 +3,48 @@ import 'package:flutter/material.dart';
 
 import '../shipments/shipment_model.dart';
 import '../shipments/shipment_status_helper.dart';
-import 'admin_shipment_details_page.dart';
 import 'admin_shipments_service.dart';
 
-class AdminShipmentsPage extends StatefulWidget {
-  const AdminShipmentsPage({super.key});
+class AdminShipmentDetailsPage extends StatefulWidget {
+  final dynamic shipmentId;
+
+  const AdminShipmentDetailsPage({
+    super.key,
+    required this.shipmentId,
+  });
 
   @override
-  State<AdminShipmentsPage> createState() => _AdminShipmentsPageState();
+  State<AdminShipmentDetailsPage> createState() =>
+      _AdminShipmentDetailsPageState();
 }
 
-class _AdminShipmentsPageState extends State<AdminShipmentsPage> {
-  final AdminShipmentsService _shipmentsService = AdminShipmentsService();
+class _AdminShipmentDetailsPageState extends State<AdminShipmentDetailsPage> {
+  final AdminShipmentsService _service = AdminShipmentsService();
 
+  ShipmentModel? _shipment;
   bool _isLoading = true;
+  bool _isAssigning = false;
   String? _errorMessage;
-  List<ShipmentModel> _shipments = [];
 
   @override
   void initState() {
     super.initState();
-    _loadShipments();
+    _loadDetails();
   }
 
-  Future<void> _loadShipments() async {
+  Future<void> _loadDetails() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
     try {
-      final shipments = await _shipmentsService.getAllShipments();
+      final shipment = await _service.getShipmentDetails(widget.shipmentId);
 
       if (!mounted) return;
 
       setState(() {
-        _shipments = shipments;
+        _shipment = shipment;
       });
     } on DioException catch (e) {
       if (!mounted) return;
@@ -62,17 +68,15 @@ class _AdminShipmentsPageState extends State<AdminShipmentsPage> {
     }
   }
 
-  Future<void> _showAssignCourierDialog(ShipmentModel shipment) async {
+  Future<void> _assignCourier() async {
     try {
-      final couriers = await _shipmentsService.getCouriers();
+      final couriers = await _service.getCouriers();
 
       if (!mounted) return;
 
       if (couriers.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('No couriers found'),
-          ),
+          const SnackBar(content: Text('No couriers found')),
         );
         return;
       }
@@ -85,9 +89,9 @@ class _AdminShipmentsPageState extends State<AdminShipmentsPage> {
           return StatefulBuilder(
             builder: (context, setDialogState) {
               return AlertDialog(
-                title: Text('Assign courier to shipment ${shipment.id}'),
+                title: Text('Assign courier to shipment ${widget.shipmentId}'),
                 content: DropdownButtonFormField<dynamic>(
-                  initialValue: selectedCourierId,
+                  value: selectedCourierId,
                   items: couriers.map((courier) {
                     final id = courier['id'];
                     final name = courier['userName'] ??
@@ -120,9 +124,13 @@ class _AdminShipmentsPageState extends State<AdminShipmentsPage> {
                     onPressed: selectedCourierId == null
                         ? null
                         : () async {
+                            setState(() {
+                              _isAssigning = true;
+                            });
+
                             try {
-                              await _shipmentsService.assignCourier(
-                                shipmentId: shipment.id,
+                              await _service.assignCourier(
+                                shipmentId: widget.shipmentId,
                                 courierId: selectedCourierId,
                               );
 
@@ -134,12 +142,11 @@ class _AdminShipmentsPageState extends State<AdminShipmentsPage> {
 
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
-                                  content:
-                                      Text('Courier assigned successfully'),
+                                  content: Text('Courier assigned successfully'),
                                 ),
                               );
 
-                              _loadShipments();
+                              Navigator.pop(context, true);
                             } on DioException catch (e) {
                               if (!context.mounted) return;
 
@@ -160,6 +167,12 @@ class _AdminShipmentsPageState extends State<AdminShipmentsPage> {
                                   content: Text('Unexpected error: $e'),
                                 ),
                               );
+                            } finally {
+                              if (mounted) {
+                                setState(() {
+                                  _isAssigning = false;
+                                });
+                              }
                             }
                           },
                     child: const Text('Assign'),
@@ -186,98 +199,82 @@ class _AdminShipmentsPageState extends State<AdminShipmentsPage> {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Unexpected error: $e'),
-        ),
+        SnackBar(content: Text('Unexpected error: $e')),
       );
     }
+  }
+
+  Widget _buildRow(String label, String? value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text('$label: ${value == null || value.isEmpty ? '-' : value}'),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Admin Shipments'),
+        title: const Text('Admin Shipment Details'),
       ),
-      body: RefreshIndicator(
-        onRefresh: _loadShipments,
-        child: Builder(
-          builder: (context) {
-            if (_isLoading) {
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            }
-
-            if (_errorMessage != null) {
-              return ListView(
-                children: [
-                  const SizedBox(height: 120),
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Text(
-                        _errorMessage!,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            }
-
-            if (_shipments.isEmpty) {
-              return ListView(
-                children: const [
-                  SizedBox(height: 120),
-                  Center(
-                    child: Text('No shipments found'),
-                  ),
-                ],
-              );
-            }
-
-            return ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: _shipments.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final shipment = _shipments[index];
-                final statusName =
-                    ShipmentStatusHelper.getStatusName(shipment.status);
-
-                return Card(
-                  child: ListTile(
-                    title: Text(
-                      'Shipment ${shipment.id ?? '-'} • $statusName',
-                    ),
-                    subtitle: Text(
-                      shipment.recipientName ??
-                          shipment.recipientCity ??
-                          'No details',
-                    ),
-                    trailing: ElevatedButton(
-                      onPressed: () => _showAssignCourierDialog(shipment),
-                      child: const Text('Assign'),
-                    ),
-                    onTap: () async {
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AdminShipmentDetailsPage(
-                            shipmentId: shipment.id,
-                          ),
-                        ),
-                      );
-
-                      _loadShipments();
-                    },
-                  ),
-                );
-              },
+      body: Builder(
+        builder: (context) {
+          if (_isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
             );
-          },
-        ),
+          }
+
+          if (_errorMessage != null) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  _errorMessage!,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
+
+          final shipment = _shipment;
+          if (shipment == null) {
+            return const Center(
+              child: Text('Shipment not found'),
+            );
+          }
+
+          final statusName = ShipmentStatusHelper.getStatusName(shipment.status);
+
+          return ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              _buildRow('ID', shipment.id?.toString()),
+              _buildRow('Status', statusName),
+              _buildRow('Recipient name', shipment.recipientName),
+              _buildRow('Recipient phone', shipment.recipientPhone),
+              _buildRow('Recipient city', shipment.recipientCity),
+              _buildRow('Recipient address', shipment.recipientAddress),
+              _buildRow('Recipient postal code', shipment.recipientPostalCode),
+              _buildRow('Description', shipment.description),
+              _buildRow('Created at', shipment.createdAt),
+              const SizedBox(height: 24),
+              SizedBox(
+                height: 52,
+                child: ElevatedButton(
+                  onPressed: _isAssigning ? null : _assignCourier,
+                  child: _isAssigning
+                      ? const SizedBox(
+                          height: 22,
+                          width: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2.5),
+                        )
+                      : const Text('Assign / Reassign courier'),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

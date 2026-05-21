@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 import '../shipments/shipment_model.dart';
+import '../shipments/shipment_status_helper.dart';
 import 'courier_shipments_service.dart';
 
 class CourierShipmentDetailsPage extends StatefulWidget {
@@ -87,7 +88,9 @@ class _CourierShipmentDetailsPageState
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Shipment status updated to $newStatus'),
+          content: Text(
+            'Shipment status updated to ${ShipmentStatusHelper.getStatusName(updated.status)}',
+          ),
         ),
       );
     } on DioException catch (e) {
@@ -201,11 +204,13 @@ class _CourierShipmentDetailsPageState
             );
           }
 
+          final statusName = ShipmentStatusHelper.getStatusName(shipment.status);
+
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
               _buildRow('ID', shipment.id?.toString()),
-              _buildRow('Status', shipment.status),
+              _buildRow('Status', statusName),
               _buildRow('Recipient name', shipment.recipientName),
               _buildRow('Recipient phone', shipment.recipientPhone),
               _buildRow('Recipient city', shipment.recipientCity),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../client/client_shipments_service.dart';
 import 'shipment_model.dart';
+import 'shipment_status_helper.dart';
 
 class ShipmentDetailsPage extends StatefulWidget {
   final ShipmentModel shipment;
@@ -70,8 +71,12 @@ class _ShipmentDetailsPageState extends State<ShipmentDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-   final canCancel =
-    widget.shipment.id != null && widget.shipment.status != '6';
+    final canCancel =
+        widget.shipment.id != null && widget.shipment.status != '6';
+
+    final statusName =
+        ShipmentStatusHelper.getStatusName(widget.shipment.status);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Shipment Details'),
@@ -81,12 +86,15 @@ class _ShipmentDetailsPageState extends State<ShipmentDetailsPage> {
         child: ListView(
           children: [
             _buildRow('ID', widget.shipment.id?.toString()),
-            _buildRow('Status', widget.shipment.status),
+            _buildRow('Status', statusName),
             _buildRow('Recipient name', widget.shipment.recipientName),
             _buildRow('Recipient phone', widget.shipment.recipientPhone),
             _buildRow('Recipient city', widget.shipment.recipientCity),
             _buildRow('Recipient address', widget.shipment.recipientAddress),
-            _buildRow('Recipient postal code', widget.shipment.recipientPostalCode),
+            _buildRow(
+              'Recipient postal code',
+              widget.shipment.recipientPostalCode,
+            ),
             _buildRow('Description', widget.shipment.description),
             _buildRow('Created at', widget.shipment.createdAt),
             const SizedBox(height: 24),
@@ -102,7 +110,7 @@ class _ShipmentDetailsPageState extends State<ShipmentDetailsPage> {
                           strokeWidth: 2.5,
                         ),
                       )
-                    : const Text('Cancel shipment'),
+                    : Text(canCancel ? 'Cancel shipment' : 'Already cancelled'),
               ),
             ),
           ],
